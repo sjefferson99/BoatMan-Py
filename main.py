@@ -88,18 +88,18 @@ def button_debounce(timer):
             if button_int_state[button] == 1:       #on transition to 0 from 1
                 button_short[button] = 1
                 print("Short " + button)
-                if utime.ticks_diff(utime.ticks_ms(), button_times[button]) > longpresstime:    #set long press if it's been long enough
-                    button_long[button] = 1
-                    print("Long " + button)
             button_int_state[button] = 0
             
         if button_integrators[button] >= int_max:   #integrator hit button value of 1
             button_integrators[button] = int_max    #reset integrator in case corrupted
-            print("Button High " + button)
             if button_int_state[button] == 0:
                 button_times[button] = utime.ticks_ms()     #set transition high time if previous state was low
-                print("Setting button high time")
-            button_int_state[button] = 1    
+            if utime.ticks_diff(utime.ticks_ms(), button_times[button]) > longpresstime and button_int_state[button] == 1:    #set long press if it's been long enough and not already set long press
+                button_long[button] = 1
+                print("Long " + button)
+                button_int_state[button] = 2    #set int_state higher than 1 and don't reset if higher to avoid a short press triggering after the button is released on long press
+            if button_int_state[button] < 2:
+                button_int_state[button] = 1
 
 #int_sample_freq seconds timer for button states
 print("initialising timer")
