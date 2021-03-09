@@ -58,6 +58,9 @@ button_long = {"BUTTON_A" : 0, "BUTTON_B" : 0, "BUTTON_X" : 0, "BUTTON_Y" : 0}  
 
 longpresstime = 1000    #button long press time in milliseconds
 
+lastactivity = 0        #activity timer on button presses
+modetimeout = 4000      #timeout to drop to run mode in ms
+
 #General config
 print("initialising general config")
 refresh = 1     #screen refresh needed
@@ -72,6 +75,7 @@ def button_debounce(timer):
     global button_long
     global button_short
     global button_times
+    global lastactivity
 
     for button in button_integrators:
 
@@ -87,6 +91,7 @@ def button_debounce(timer):
             #print("Button low: " + button)
             if button_int_state[button] == 1:       #on transition to 0 from 1
                 button_short[button] = 1
+                lastactivity = button_times[button] = utime.ticks_ms()
                 print("Short " + button)
             button_int_state[button] = 0
             
@@ -96,6 +101,7 @@ def button_debounce(timer):
                 button_times[button] = utime.ticks_ms()     #set transition high time if previous state was low
             if utime.ticks_diff(utime.ticks_ms(), button_times[button]) > longpresstime and button_int_state[button] == 1:    #set long press if it's been long enough and not already set long press
                 button_long[button] = 1
+                lastactivity = button_times[button] = utime.ticks_ms()
                 print("Long " + button)
                 button_int_state[button] = 2    #set int_state higher than 1 and don't reset if higher to avoid a short press triggering after the button is released on long press
             if button_int_state[button] < 2:
@@ -160,6 +166,11 @@ else:
 print("entering program loop")
 
 while True:
+    if utime.ticks_diff(utime.ticks_ms(), lastactivity) > modetimeout and current_mode != 0:
+        print("timing out config mode")
+        current_mode = 0
+        refresh = 1
+    
     if current_mode == 0:   #run mode
         if refresh == 1:    #Update display
             print("refreshing display")
