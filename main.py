@@ -307,19 +307,19 @@ while True:
             picodisplay.update()
             refresh = 0
         
-        if button_short["BUTTON_A"]:
+        if button_short["BUTTON_B"]:
             print("changing config item")
             if config_item < (len(config_items) - 1):
                 config_item += 1
             else:
                 config_item = 0
             print(config_item)
-            button_short["BUTTON_A"] = 0
+            button_short["BUTTON_B"] = 0
             refresh = 1
 
-        if button_short["BUTTON_B"]:
+        if button_short["BUTTON_A"]:
             config_items[list(config_items)[config_item]] = not config_items[list(config_items)[config_item]]
-            button_short["BUTTON_B"] = 0
+            button_short["BUTTON_A"] = 0
             refresh = 1
         
         if button_short["BUTTON_X"]:    #change mode
