@@ -38,6 +38,9 @@ BUTTON_B = machine.Pin(13, machine.Pin.IN, machine.Pin.PULL_UP)
 BUTTON_X = machine.Pin(14, machine.Pin.IN, machine.Pin.PULL_UP)
 BUTTON_Y = machine.Pin(15, machine.Pin.IN, machine.Pin.PULL_UP)
 fader = machine.ADC(28)
+pir = machine.Pin(22, machine.Pin.IN, machine.Pin.PULL_DOWN)
+pir_last = 0    #PIR previous value
+pir_change = 2  #PIR state change 0=no change; 1=change
 
 #init LED fader config
 print("initialising LED values")
@@ -66,6 +69,7 @@ print("initialising general config")
 refresh = 1     #screen refresh needed
 current_mode = 0
 modes = ["run", "lights", "misc"]
+pir_mode = 1    #0=manual control; 1 = PIR control
 
 #Button functions
 print("initialising functions")
@@ -166,11 +170,51 @@ else:
 print("entering program loop")
 
 while True:
+    #Config time out
     if utime.ticks_diff(utime.ticks_ms(), lastactivity) > modetimeout and current_mode != 0:
         print("timing out config mode")
         current_mode = 0
         refresh = 1
     
+    #PIR state monitor
+    if pir.value() != pir_last:
+        print("PIR state change")
+        print("PIR state: " + str(pir.value()))
+        pir_change = 1
+        pir_last = pir.value()
+    else:
+        pir_change = 0
+    
+    #PIR duty config
+    if pir_change and pir_mode:
+        if pir.value() == 1:
+            print("Entering PIR 1 change config")
+            if current_bank == 0:
+                ext_led1.duty_u16(ledbanks[0])
+                ext_led2.duty_u16(ledbanks[0])
+                ext_led3.duty_u16(ledbanks[0])
+                ext_led4.duty_u16(ledbanks[0])
+                ext_led5.duty_u16(ledbanks[0])
+                ext_led6.duty_u16(0)
+                ext_led7.duty_u16(0)
+            else:
+                ext_led1.duty_u16(ledbanks[1])
+                ext_led2.duty_u16(ledbanks[2])
+                ext_led3.duty_u16(ledbanks[3])
+                ext_led4.duty_u16(ledbanks[4])
+                ext_led5.duty_u16(ledbanks[5])
+                ext_led6.duty_u16(ledbanks[6])
+                ext_led7.duty_u16(ledbanks[7])
+        else:
+            print("Entering PIR 0 change config")
+            ext_led1.duty_u16(0)
+            ext_led2.duty_u16(0)
+            ext_led3.duty_u16(0)
+            ext_led4.duty_u16(0)
+            ext_led5.duty_u16(0)
+            ext_led6.duty_u16(0)
+            ext_led7.duty_u16(0)
+
     if current_mode == 0:   #run mode
         if refresh == 1:    #Update display
             print("refreshing display")
@@ -237,7 +281,7 @@ while True:
             ext_led5.duty_u16(ledbanks[5])
             ext_led6.duty_u16(ledbanks[6])
             ext_led7.duty_u16(ledbanks[7])
-        
+
         if button_short["BUTTON_X"]:    #change mode
             current_mode = 2
             refresh = 1
