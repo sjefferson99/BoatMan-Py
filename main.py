@@ -1,3 +1,8 @@
+# To do
+# Fix passing through light fade mode without applying fader values (Set off/fade/on and only toggle if button A changed)
+# Add selection highlight to config items so you know what is being changed
+
+
 import utime
 import machine
 from machine import Timer
@@ -69,7 +74,8 @@ print("initialising general config")
 refresh = 1     #screen refresh needed
 current_mode = 0
 modes = ["run", "lights", "misc"]
-pir_mode = 1    #0=manual control; 1 = PIR control
+config_items = {"pir" : True, "option_2" : False}     #0=manual control; 1 = PIR control
+config_item = 0 #misc config row select
 
 #Button functions
 print("initialising functions")
@@ -186,7 +192,7 @@ while True:
         pir_change = 0
     
     #PIR duty config
-    if pir_change and pir_mode:
+    if pir_change and config_items["pir"]:
         if pir.value() == 1:
             print("Entering PIR 1 change config")
             if current_bank == 0:
@@ -265,6 +271,7 @@ while True:
                 ledbanks[current_bank] = fader.read_u16()
         
         #Update LED duty cycles for global or individual modes
+        # Need to design a passthrough so off/fade/on mode is selected by button a and remains as in when cycling through to misc config
         if current_bank == 0:
             ext_led1.duty_u16(ledbanks[0])
             ext_led2.duty_u16(ledbanks[0])
@@ -293,12 +300,27 @@ while True:
             picodisplay.set_pen(0, 255, 0)
             picodisplay.clear()                
             picodisplay.set_pen(255, 255, 255)       
-            picodisplay.text("BoatMan", 10, 10, 240, 4)
-            picodisplay.text("Boat Manager", 10, 40, 240, 2)
-            picodisplay.text("Misc Config" , 10, 70, 240, 2)
-            picodisplay.text("X: Mode", 10, 100, 240, 2)
+            picodisplay.text("Misc Config" , 10, 10, 240, 2)
+            picodisplay.text("PIR Mode: " + str(config_items["pir"]), 10, 30, 240, 2)
+            picodisplay.text("Option 2: " + str(config_items["option_2"]), 10, 50, 240, 2)
+            #Need to move a selection rectangle over selected choice
             picodisplay.update()
             refresh = 0
+        
+        if button_short["BUTTON_A"]:
+            print("changing config item")
+            if config_item < (len(config_items) - 1):
+                config_item += 1
+            else:
+                config_item = 0
+            print(config_item)
+            button_short["BUTTON_A"] = 0
+            refresh = 1
+
+        if button_short["BUTTON_B"]:
+            config_items[list(config_items)[config_item]] = not config_items[list(config_items)[config_item]]
+            button_short["BUTTON_B"] = 0
+            refresh = 1
         
         if button_short["BUTTON_X"]:    #change mode
             current_mode = 0
