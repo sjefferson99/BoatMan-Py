@@ -1,8 +1,3 @@
-# To do
-# Fix passing through light fade mode without applying fader values (Set off/fade/on and only toggle if button A changed)
-# Add selection highlight to config items so you know what is being changed
-
-
 import utime
 import machine
 from machine import Timer
