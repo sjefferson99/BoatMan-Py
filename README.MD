@@ -1,0 +1,1 @@
+Reliable control module for boats based on the Raspberry Pi Pico microcontroller and Pimoroni Display Pack written in MicroPython
